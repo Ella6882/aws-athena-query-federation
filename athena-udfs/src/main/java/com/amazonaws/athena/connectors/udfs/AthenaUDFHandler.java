@@ -23,6 +23,8 @@ import com.amazonaws.athena.connector.lambda.handlers.UserDefinedFunctionHandler
 import com.amazonaws.athena.connector.lambda.security.CachableSecretsManager;
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClient;
 import com.google.common.annotations.VisibleForTesting;
+import nl.basjes.parse.useragent.UserAgent;
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -46,10 +48,19 @@ public class AthenaUDFHandler
     private static final String SOURCE_TYPE = "athena_common_udfs";
 
     private final CachableSecretsManager cachableSecretsManager;
+    private UserAgentAnalyzer uaa;
 
     public AthenaUDFHandler()
     {
         this(new CachableSecretsManager(AWSSecretsManagerClient.builder().build()));
+        
+        System.out.println("before");
+        this.uaa = UserAgentAnalyzer
+            .newBuilder()
+            .hideMatcherLoadStats()
+            .withCache(10000)
+            .build();
+        System.out.println("after");
     }
 
     @VisibleForTesting
@@ -57,6 +68,7 @@ public class AthenaUDFHandler
     {
         super(SOURCE_TYPE);
         this.cachableSecretsManager = cachableSecretsManager;
+        this.uaa = null;
     }
 
     /**
@@ -93,6 +105,16 @@ public class AthenaUDFHandler
         // return encoded string
         byte[] compressedBytes = byteArrayOutputStream.toByteArray();
         return Base64.getEncoder().encodeToString(compressedBytes);
+    }
+
+    public String parseuseragent(String useragent)
+    {
+        UserAgent agent = uaa.parse(useragent);
+
+        for (String fieldName : agent.getAvailableFieldNamesSorted()) {
+            System.out.println(fieldName + " = " + agent.getValue(fieldName));
+        }
+        return agent.getValue(UserAgent.DEVICE_CLASS);
     }
 
     /**

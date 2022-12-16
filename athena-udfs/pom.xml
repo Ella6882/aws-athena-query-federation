@@ -56,6 +56,11 @@
             <version>${log4j2Version}</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>nl.basjes.parse.useragent</groupId>
+            <artifactId>yauaa</artifactId>
+            <version>7.9.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
